@@ -1,0 +1,301 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ *
+ * Theme tokens
+ *
+ * Colours live here as space-separated RGB channels so Tailwind can apply
+ * opacity to them (rgb(var(--x) / <alpha-value>)). Light is the default;
+ * flipping `data-theme="dark"` on <html> re-points every channel at once.
+ *
+ * Naming is by *role*, not by lightness. `--ink-900` is "primary text" and
+ * `--ink-100` is "app canvas" in both themes — the values invert, the meaning
+ * does not — so no component has to know which theme is active.
+ * ------------------------------------------------------------------ */
+@layer base {
+  :root {
+    color-scheme: light;
+
+    --surface: 255 255 255;
+
+    --ink-900: 15 23 32;
+    --ink-800: 28 39 51;
+    --ink-700: 51 65 85;
+    --ink-600: 71 85 105;
+    --ink-500: 100 116 139;
+    --ink-400: 148 163 184;
+    --ink-300: 203 213 225;
+    --ink-200: 226 232 240;
+    --ink-100: 241 245 249;
+    --ink-50: 248 250 252;
+
+    --act-700: 29 78 216;
+    --act-600: 37 99 235;
+    --act-500: 59 130 246;
+    --act-100: 219 234 254;
+    --act-50: 239 246 255;
+
+    --ai-700: 109 40 217;
+    --ai-600: 124 58 237;
+    --ai-500: 139 92 246;
+    --ai-100: 237 233 254;
+    --ai-50: 245 243 255;
+
+    --ok-700: 21 128 61;
+    --ok-600: 22 163 74;
+    --ok-100: 220 252 231;
+    --ok-50: 240 253 244;
+
+    --warn-700: 180 83 9;
+    --warn-600: 217 119 6;
+    --warn-100: 254 243 199;
+    --warn-50: 255 251 235;
+
+    --stop-700: 185 28 28;
+    --stop-600: 220 38 38;
+    --stop-100: 254 226 226;
+    --stop-50: 254 242 242;
+
+    --paper: 253 252 249;
+    --paper-edge: 231 226 214;
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --surface: 27 36 50;
+
+    --ink-900: 242 245 249;
+    --ink-800: 221 227 236;
+    --ink-700: 195 204 216;
+    --ink-600: 167 178 194;
+    --ink-500: 139 152 171;
+    --ink-400: 107 122 143;
+    --ink-300: 58 71 87;
+    --ink-200: 43 54 70;
+    --ink-100: 15 22 32;
+    --ink-50: 35 46 63;
+
+    --act-700: 156 192 255;
+    --act-600: 77 141 240;
+    --act-500: 96 165 250;
+    --act-100: 30 58 95;
+    --act-50: 23 36 54;
+
+    --ai-700: 196 181 253;
+    --ai-600: 139 92 246;
+    --ai-500: 167 139 250;
+    --ai-100: 46 36 80;
+    --ai-50: 32 26 58;
+
+    --ok-700: 134 239 172;
+    --ok-600: 34 197 94;
+    --ok-100: 20 51 31;
+    --ok-50: 15 36 23;
+
+    --warn-700: 252 211 77;
+    --warn-600: 245 158 11;
+    --warn-100: 58 44 10;
+    --warn-50: 42 31 8;
+
+    --stop-700: 252 165 165;
+    --stop-600: 239 68 68;
+    --stop-100: 61 26 26;
+    --stop-50: 44 19 19;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-ink-100 text-ink-800;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* One focus treatment for the whole product. If it can take focus, it looks
+     like this — no exceptions, which is half of what makes affordances legible. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-act-500 ring-offset-2 ring-offset-surface rounded-[3px];
+  }
+
+  ::selection {
+    @apply bg-act-100 text-ink-900;
+  }
+
+  /* Honor a reduced-motion preference: keep meaning, drop the movement. The
+     attention pulse and panel entrances collapse to instant, transitions to
+     near-instant, so nothing animates for users who asked it not to. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* --------------------------------------------------------------- *
+   * Field affordances (Challenge 08)
+   *
+   * Every value in the product renders through one of these. The rules:
+   *   - Anything with a violet marker was produced by a machine.
+   *   - Anything with a visible edit border can be typed into.
+   *   - Anything with neither is read-only, and says why if it's locked.
+   * Colour alone never carries the meaning — each state also has a distinct
+   * border treatment and an icon, so the system survives greyscale and
+   * colour-blindness.
+   * --------------------------------------------------------------- */
+
+  .field-base {
+    @apply relative flex w-full items-center justify-between gap-3 rounded-md
+           px-2.5 py-1.5 text-right transition-colors duration-100;
+  }
+
+  /* Editable — a real input well. Solid border, hover lift, text cursor. */
+  .field-editable {
+    @apply border border-ink-300 bg-surface cursor-text
+           hover:border-act-500 focus-within:border-act-600;
+  }
+
+  /* AI, unverified — violet dashed underline. Deliberately *not* a full box:
+     the value is provisional, and a full box would read as settled. */
+  .field-ai {
+    @apply border border-dashed border-ai-500 bg-ai-50 cursor-pointer
+           hover:bg-ai-100;
+  }
+
+  /* Verified — a human signed off. Quiet green, solid, no longer shouting. */
+  .field-verified {
+    @apply border border-ok-600/40 bg-ok-50 cursor-pointer hover:bg-ok-100;
+  }
+
+  /* Needs approval — amber fill plus the amber alert icon already make this
+     scannable down a long column; a thick side-bar on top of that was
+     redundant, so the status reads from the fill and marker alone. */
+  .field-approval {
+    @apply border border-warn-600/60 bg-warn-50 cursor-pointer hover:bg-warn-100;
+  }
+
+  /* Calculated — no border at all. Nothing to type, but still traceable. */
+  .field-calculated {
+    @apply border border-transparent bg-ink-50 cursor-pointer hover:bg-ink-100;
+  }
+
+  /* Locked — grey, hatched, not-allowed cursor, and it always states a reason. */
+  .field-locked {
+    @apply border border-ink-200 bg-ink-100 text-ink-500 cursor-not-allowed;
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 5px,
+      rgb(var(--ink-500) / 0.07) 5px,
+      rgb(var(--ink-500) / 0.07) 10px
+    );
+  }
+
+  .field-selected {
+    @apply ring-2 ring-act-500 ring-offset-1 ring-offset-surface;
+  }
+
+  /* --------------------------------------------------------------- *
+   * Document facsimile
+   *
+   * A scan is a scan: the sheet stays light in both themes. To keep its
+   * printed text dark-on-paper when the app is dark, the ink scale and the
+   * surface token are re-anchored to their light values *locally* here, so
+   * everything drawn inside a sheet reads correctly regardless of theme.
+   * --------------------------------------------------------------- */
+
+  .doc-sheet {
+    @apply relative bg-paper border border-paper-edge shadow-sheet;
+    aspect-ratio: 8.5 / 11;
+
+    --surface: 255 255 255;
+    --ink-900: 15 23 32;
+    --ink-800: 28 39 51;
+    --ink-700: 51 65 85;
+    --ink-600: 71 85 105;
+    --ink-500: 100 116 139;
+    --ink-400: 148 163 184;
+    --ink-300: 203 213 225;
+    --ink-200: 226 232 240;
+    --ink-100: 241 245 249;
+    --ink-50: 248 250 252;
+    --ai-700: 109 40 217;
+  }
+
+  .doc-highlight {
+    @apply absolute rounded-sm pointer-events-none transition-all duration-300;
+    box-shadow:
+      0 0 0 2px rgb(124 58 237),
+      0 0 0 5px rgba(124, 58, 237, 0.18);
+    background: rgba(139, 92, 246, 0.13);
+  }
+
+  .doc-highlight-secondary {
+    @apply absolute rounded-sm pointer-events-none transition-all duration-300;
+    box-shadow: 0 0 0 1.5px rgba(124, 58, 237, 0.45);
+    background: rgba(139, 92, 246, 0.07);
+  }
+
+  /* --------------------------------------------------------------- *
+   * Small shared pieces
+   * --------------------------------------------------------------- */
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5
+           text-2xs font-medium leading-4 whitespace-nowrap;
+  }
+
+  .card {
+    @apply rounded-lg border border-ink-200 bg-surface shadow-card;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5
+           text-xs font-medium transition-colors disabled:opacity-40
+           disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-act-600 text-white hover:bg-act-700;
+  }
+
+  .btn-ghost {
+    @apply btn border border-ink-300 bg-surface text-ink-700 hover:bg-ink-50;
+  }
+
+  .btn-ai {
+    @apply btn bg-ai-600 text-white hover:bg-ai-700;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Scrollbars that don't fight the density of the return list. */
+@layer utilities {
+  .scroll-slim {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--ink-300)) transparent;
+  }
+  .scroll-slim::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scroll-slim::-webkit-scrollbar-thumb {
+    background-color: rgb(var(--ink-300));
+    border-radius: 8px;
+  }
+  .scroll-slim::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
